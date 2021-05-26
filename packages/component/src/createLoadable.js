@@ -129,7 +129,9 @@ function createLoadable({
           // So we can require now the module synchronously
           this.loadSync()
 
-          props.__chunkExtractor.addChunk(ctor.chunkName(props))
+          if (!options.excludeChunkFromExtractor) {
+            props.__chunkExtractor.addChunk(ctor.chunkName(props))
+          }
           return
         }
 
