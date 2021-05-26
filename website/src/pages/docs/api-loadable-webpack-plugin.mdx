@@ -17,10 +17,14 @@ Create a webpack loadable plugin.
 | `options.outputAsset`          | Always write stats file to the `output.path` directory. Defaults to `true`                   |
 | `options.writeToDisk`          | Accepts `boolean` or `object`. Always write stats file to disk. Default to `false`.          |
 | `options.writeToDisk.filename` | Write assets to disk at given `filename` location                                            |
-| `options.chunkLoadingGlobal`   | Overrides Webpack's `chunkLoadingGlobal` allowing multiple Webpack runtimes on the same page |
+| `options.chunkLoadingGlobal`   | Overrides webpack's `chunkLoadingGlobal` allowing multiple webpack runtimes on the same page |
+| `options.stats`                | Configure the [stats][wp-stats] to be output by webpack. Find the defaults [here][lc-stats]. |
 
 ```js
 new LoadablePlugin({ filename: 'stats.json', writeToDisk: true })
 ```
 
 > Writing file to disk can be useful if you are using `razzle` or `webpack-dev-server`.
+
+[wp-stats]: https://webpack.js.org/configuration/stats/
+[lc-stats]: https://github.com/gregberge/loadable-components/blob/main/packages/webpack-plugin/src/index.js#L23-L43

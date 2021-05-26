@@ -11,36 +11,46 @@ class LoadablePlugin {
     writeToDisk,
     outputAsset = true,
     chunkLoadingGlobal = '__LOADABLE_LOADED_CHUNKS__',
+    stats,
   } = {}) {
-    this.opts = { filename, writeToDisk, outputAsset, path, chunkLoadingGlobal }
+    this.opts = {
+      filename,
+      writeToDisk,
+      outputAsset,
+      path,
+      chunkLoadingGlobal,
+      stats,
+    }
 
     // The Webpack compiler instance
     this.compiler = null
   }
 
   handleEmit = compilation => {
-    const stats = compilation.getStats().toJson({
-      all: false,
-      assets: true,
-      cachedAssets: true,
-      chunks: false,
-      chunkGroups: true,
-      chunkGroupChildren: true,
-      hash: true,
-      ids: true,
-      outputPath: true,
-      publicPath: true,
-    })
+    const stats = compilation.getStats().toJson(
+      this.opts.stats || {
+        all: false,
+        assets: true,
+        cachedAssets: true,
+        chunks: false,
+        chunkGroups: true,
+        chunkGroupChildren: true,
+        hash: true,
+        ids: true,
+        outputPath: true,
+        publicPath: true,
+      },
+    )
 
     stats.generator = 'loadable-components'
 
     // we don't need all chunk information, only a type
-    stats.chunks = [...compilation.chunks].map((chunk) => {
+    stats.chunks = [...compilation.chunks].map(chunk => {
       return {
         id: chunk.id,
         files: [...chunk.files],
-      };
-    });
+      }
+    })
 
     const result = JSON.stringify(stats, null, 2)
 
