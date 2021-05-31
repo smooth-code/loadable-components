@@ -267,6 +267,14 @@ class ChunkExtractor {
     return one(chunks)
   }
 
+  getChunkAssetsByType(scriptType, chunks) {
+    const assets = this.getChunkAssets(chunks)
+    if (scriptType) {
+      return assets.filter(asset => asset.scriptType === scriptType)
+    }
+    return assets
+  }
+
   getChunkChildAssets(chunks, type) {
     const one = chunk => {
       const chunkGroup = this.getChunkGroup(chunk)
@@ -361,6 +369,32 @@ class ChunkExtractor {
     ]
   }
 
+  getFilteredChunks(includedChunks) {
+    let chunks = [...this.entrypoints, ...this.chunks]
+    if (includedChunks && includedChunks.length > 0) {
+      chunks = chunks.filter(chunk => includedChunks.includes(chunk))
+    }
+    return chunks
+  }
+
+  getRequiredAndAssetsScriptTags(assets, extraProps) {
+    const requiredScriptTag = this.getRequiredChunksScriptTag(extraProps)
+    const assetsScriptTags = assets.map(asset =>
+      assetToScriptTag(asset, extraProps),
+    )
+    return joinTags([requiredScriptTag, ...assetsScriptTags])
+  }
+
+  getRequiredAndAssetsScriptElements(assets, extraProps) {
+    const requiredScriptElements = this.getRequiredChunksScriptElements(
+      extraProps,
+    )
+    const assetsScriptElements = assets.map(asset =>
+      assetToScriptElement(asset, extraProps),
+    )
+    return [...requiredScriptElements, ...assetsScriptElements]
+  }
+
   // Public methods
   // -----------------
 
@@ -396,31 +430,38 @@ class ChunkExtractor {
 
   getMainAssets(scriptType) {
     const chunks = [...this.entrypoints, ...this.chunks]
-    const assets = this.getChunkAssets(chunks)
-    if (scriptType) {
-      return assets.filter(asset => asset.scriptType === scriptType)
-    }
-    return assets
+    return this.getChunkAssetsByType(scriptType, chunks)
+  }
+
+  getMainAssetsByChunks({ scriptType, includedChunks = [] } = {}) {
+    const chunks = this.getFilteredChunks(includedChunks)
+    return this.getChunkAssetsByType(scriptType, chunks)
   }
 
   getScriptTags(extraProps = {}) {
-    const requiredScriptTag = this.getRequiredChunksScriptTag(extraProps)
     const mainAssets = this.getMainAssets('script')
-    const assetsScriptTags = mainAssets.map(asset =>
-      assetToScriptTag(asset, extraProps),
-    )
-    return joinTags([requiredScriptTag, ...assetsScriptTags])
+    return this.getRequiredAndAssetsScriptTags(mainAssets, extraProps)
+  }
+
+  getScriptTagsByChunks({ extraProps = {}, includedChunks = [] } = {}) {
+    const mainAssets = this.getMainAssetsByChunks({
+      scriptType: 'script',
+      includedChunks,
+    })
+    return this.getRequiredAndAssetsScriptTags(mainAssets, extraProps)
   }
 
   getScriptElements(extraProps = {}) {
-    const requiredScriptElements = this.getRequiredChunksScriptElements(
-      extraProps,
-    )
     const mainAssets = this.getMainAssets('script')
-    const assetsScriptElements = mainAssets.map(asset =>
-      assetToScriptElement(asset, extraProps),
-    )
-    return [...requiredScriptElements, ...assetsScriptElements]
+    return this.getRequiredAndAssetsScriptElements(mainAssets, extraProps)
+  }
+
+  getScriptElementsByChunks({ extraProps = {}, includedChunks = [] } = {}) {
+    const mainAssets = this.getMainAssetsByChunks({
+      scriptType: 'script',
+      includedChunks,
+    })
+    return this.getRequiredAndAssetsScriptElements(mainAssets, extraProps)
   }
 
   getCssString() {

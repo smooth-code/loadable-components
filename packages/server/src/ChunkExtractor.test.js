@@ -126,6 +126,71 @@ describe('ChunkExtrator', () => {
     })
   })
 
+  describe('#getScriptTagsByChunks', () => {
+    it('should return main script tag without chunk', () => {
+      expect(extractor.getScriptTagsByChunks()).toMatchInlineSnapshot(`
+        "<script id=\\"__LOADABLE_REQUIRED_CHUNKS__\\" type=\\"application/json\\">[]</script><script id=\\"__LOADABLE_REQUIRED_CHUNKS___ext\\" type=\\"application/json\\">{\\"namedChunks\\":[]}</script>
+        <script async data-chunk=\\"main\\" src=\\"/dist/node/main.js\\"></script>"
+      `)
+    })
+
+    it('should return main script tag without chunk with namespaced required chunks id', () => {
+      const testExtractor = new ChunkExtractor({
+        namespace: 'testapp',
+        stats,
+        outputPath: path.resolve(__dirname, '../__fixtures__'),
+      })
+      expect(testExtractor.getScriptTagsByChunks()).toMatchInlineSnapshot(`
+        "<script id=\\"testapp__LOADABLE_REQUIRED_CHUNKS__\\" type=\\"application/json\\">[]</script><script id=\\"testapp__LOADABLE_REQUIRED_CHUNKS___ext\\" type=\\"application/json\\">{\\"namedChunks\\":[]}</script>
+        <script async data-chunk=\\"main\\" src=\\"/dist/node/main.js\\"></script>"
+      `)
+    })
+
+    it('should return other chunks if referenced', () => {
+      extractor.addChunk('letters-A')
+      expect(extractor.getScriptTagsByChunks()).toMatchInlineSnapshot(`
+        "<script id=\\"__LOADABLE_REQUIRED_CHUNKS__\\" type=\\"application/json\\">[\\"letters-A\\"]</script><script id=\\"__LOADABLE_REQUIRED_CHUNKS___ext\\" type=\\"application/json\\">{\\"namedChunks\\":[\\"letters-A\\"]}</script>
+        <script async data-chunk=\\"main\\" src=\\"/dist/node/main.js\\"></script>
+        <script async data-chunk=\\"letters-A\\" src=\\"/dist/node/letters-A.js\\"></script>"
+      `)
+    })
+
+    it('should return only the specified chunks', () => {
+      extractor.addChunk('letters-A')
+      expect(extractor.getScriptTagsByChunks({ includedChunks: 'letters-A' }))
+        .toMatchInlineSnapshot(`
+        "<script id=\\"__LOADABLE_REQUIRED_CHUNKS__\\" type=\\"application/json\\">[\\"letters-A\\"]</script><script id=\\"__LOADABLE_REQUIRED_CHUNKS___ext\\" type=\\"application/json\\">{\\"namedChunks\\":[\\"letters-A\\"]}</script>
+        <script async data-chunk=\\"letters-A\\" src=\\"/dist/node/letters-A.js\\"></script>"
+      `)
+    })
+
+    it('should add extra props if specified - object argument', () => {
+      extractor.addChunk('letters-A')
+      expect(
+        extractor.getScriptTagsByChunks({ extraProps: { nonce: 'testnonce' } }),
+      ).toMatchInlineSnapshot(`
+        "<script id=\\"__LOADABLE_REQUIRED_CHUNKS__\\" type=\\"application/json\\" nonce=\\"testnonce\\">[\\"letters-A\\"]</script><script id=\\"__LOADABLE_REQUIRED_CHUNKS___ext\\" type=\\"application/json\\" nonce=\\"testnonce\\">{\\"namedChunks\\":[\\"letters-A\\"]}</script>
+        <script async data-chunk=\\"main\\" src=\\"/dist/node/main.js\\" nonce=\\"testnonce\\"></script>
+        <script async data-chunk=\\"letters-A\\" src=\\"/dist/node/letters-A.js\\" nonce=\\"testnonce\\"></script>"
+      `)
+    })
+
+    it('should add extra props if specified - function argument', () => {
+      extractor.addChunk('letters-A')
+      expect(
+        extractor.getScriptTagsByChunks({
+          extraProps: asset => {
+            return { nonce: asset ? asset.chunk : 'anonymous' }
+          },
+        }),
+      ).toMatchInlineSnapshot(`
+        "<script id=\\"__LOADABLE_REQUIRED_CHUNKS__\\" type=\\"application/json\\" nonce=\\"anonymous\\">[\\"letters-A\\"]</script><script id=\\"__LOADABLE_REQUIRED_CHUNKS___ext\\" type=\\"application/json\\" nonce=\\"anonymous\\">{\\"namedChunks\\":[\\"letters-A\\"]}</script>
+        <script async data-chunk=\\"main\\" src=\\"/dist/node/main.js\\" nonce=\\"main\\"></script>
+        <script async data-chunk=\\"letters-A\\" src=\\"/dist/node/letters-A.js\\" nonce=\\"letters-A\\"></script>"
+      `)
+    })
+  })
+
   describe('#getScriptElements', () => {
     it('should return main script tag without chunk with namespaced id for loadable chunks', () => {
       const testExtractor = new ChunkExtractor({
@@ -358,6 +423,305 @@ describe('ChunkExtrator', () => {
       })
 
       expect(testExtractor.getScriptElements()).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[]",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS__"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[]}",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS___ext"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="main"
+            src="https://cdn.example.org/v1.1.0/main.js"
+          />,
+        ]
+      `)
+    })
+  })
+
+  describe('#getScriptElementsByChunks', () => {
+    it('should return main script tag without chunk with namespaced id for loadable chunks', () => {
+      const testExtractor = new ChunkExtractor({
+        namespace: 'testapp',
+        stats,
+        outputPath: path.resolve(__dirname, '../__fixtures__'),
+      })
+      expect(testExtractor.getScriptElementsByChunks()).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[]",
+              }
+            }
+            id="testapp__LOADABLE_REQUIRED_CHUNKS__"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[]}",
+              }
+            }
+            id="testapp__LOADABLE_REQUIRED_CHUNKS___ext"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="main"
+            src="/dist/node/main.js"
+          />,
+        ]
+      `)
+    })
+
+    it('should return main script tag without chunk', () => {
+      expect(extractor.getScriptElementsByChunks()).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[]",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS__"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[]}",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS___ext"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="main"
+            src="/dist/node/main.js"
+          />,
+        ]
+      `)
+    })
+
+    it('should return other chunks if referenced', () => {
+      extractor.addChunk('letters-A')
+      expect(extractor.getScriptElementsByChunks()).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[\\"letters-A\\"]",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS__"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[\\"letters-A\\"]}",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS___ext"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="main"
+            src="/dist/node/main.js"
+          />,
+          <script
+            async={true}
+            data-chunk="letters-A"
+            src="/dist/node/letters-A.js"
+          />,
+        ]
+      `)
+    })
+
+    it('should return the specified chunks', () => {
+      extractor.addChunk('letters-A')
+      expect(
+        extractor.getScriptElementsByChunks({ includedChunks: 'letters-A' }),
+      ).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[\\"letters-A\\"]",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS__"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[\\"letters-A\\"]}",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS___ext"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="letters-A"
+            src="/dist/node/letters-A.js"
+          />,
+        ]
+      `)
+    })
+
+    // params not working
+    it.skip('should allow for query params in chunk names', () => {
+      extractor.addChunk('letters-E')
+      expect(extractor.getScriptElementsByChunks()).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[\\"letters-E\\"]",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS__"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[\\"letters-E\\"]}",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS___ext"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="main"
+            src="/dist/node/main.js"
+          />,
+          <script
+            async={true}
+            data-chunk="letters-E"
+            src="/dist/node/letters-E.js?param"
+          />,
+        ]
+      `)
+    })
+
+    it('should add extra props if specified - object argument', () => {
+      extractor.addChunk('letters-A')
+      expect(
+        extractor.getScriptElementsByChunks({
+          extraProps: { nonce: 'testnonce' },
+        }),
+      ).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[\\"letters-A\\"]",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS__"
+            nonce="testnonce"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[\\"letters-A\\"]}",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS___ext"
+            nonce="testnonce"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="main"
+            nonce="testnonce"
+            src="/dist/node/main.js"
+          />,
+          <script
+            async={true}
+            data-chunk="letters-A"
+            nonce="testnonce"
+            src="/dist/node/letters-A.js"
+          />,
+        ]
+      `)
+    })
+
+    it('should add extra props if specified - function argument', () => {
+      extractor.addChunk('letters-A')
+      expect(
+        extractor.getScriptElementsByChunks({
+          extraProps: asset => {
+            return { nonce: asset ? asset.chunk : 'anonymous' }
+          },
+        }),
+      ).toMatchInlineSnapshot(`
+        Array [
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "[\\"letters-A\\"]",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS__"
+            nonce="anonymous"
+            type="application/json"
+          />,
+          <script
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "{\\"namedChunks\\":[\\"letters-A\\"]}",
+              }
+            }
+            id="__LOADABLE_REQUIRED_CHUNKS___ext"
+            nonce="anonymous"
+            type="application/json"
+          />,
+          <script
+            async={true}
+            data-chunk="main"
+            nonce="main"
+            src="/dist/node/main.js"
+          />,
+          <script
+            async={true}
+            data-chunk="letters-A"
+            nonce="letters-A"
+            src="/dist/node/letters-A.js"
+          />,
+        ]
+      `)
+    })
+
+    it('should use publicPath from options', () => {
+      const testExtractor = new ChunkExtractor({
+        stats,
+        publicPath: 'https://cdn.example.org/v1.1.0/',
+        outputPath: path.resolve(__dirname, '../__fixtures__'),
+      })
+
+      expect(testExtractor.getScriptElementsByChunks()).toMatchInlineSnapshot(`
         Array [
           <script
             dangerouslySetInnerHTML={
@@ -655,7 +1019,7 @@ describe('ChunkExtrator', () => {
       expect(extractor.inputFileSystem.readFile).toHaveBeenCalledTimes(2)
       expect(data).toMatchInlineSnapshot(`
         "foo
-        
+
         foo
         "
       `)

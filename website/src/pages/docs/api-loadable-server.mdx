@@ -69,6 +69,18 @@ Get scripts as a string of `<script>` tags.
 const body = `<body><div id="root">${html}</div>${chunkExtractor.getScriptTags()}</body>`
 ```
 
+## chunkExtractor.getScriptTagsByChunks
+
+Get scripts as a string of `<script>` tags limited to only the chunks that you have specified.
+
+| Arguments                                                          | Description                                                                                                                                                                            |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| { extraProps: `attributes` or `attrFn`, includedChunks: string[] } | `extraProps` attributes added to script tags, or a function that receives a `chunk` and returns the attributes. `includedChunks` filter generated tags to only those within this list. |
+
+```js
+const body = `<body><div id="root">${html}</div>${chunkExtractor.getScriptTagsByChunks({ includedChunks: ['chunk-name'] })}</body>`
+```
+
 ## chunkExtractor.getScriptElements
 
 Get scripts as an array of React `<script>` elements.
@@ -82,6 +94,23 @@ const body = renderToString(
   <body>
     <div id="root" dangerouslySetInnerHtml={{ __html: html }} />
     {chunkExtractor.getScriptElements()}
+  </body>,
+)
+```
+
+## chunkExtractor.getScriptElementsByChunks
+
+Get scripts as an array of React `<script>` elements limited to only the chunks that you have specified.
+
+| Arguments                                                          | Description                                                                                                                                                                                    |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| { extraProps: `attributes` or `attrFn`, includedChunks: string[] } | `extraProps` attributes added to script elements, or a function that receives a `chunk` and returns the attributes. `includedChunks` filter generated elements to only those within this list. |
+
+```js
+const body = renderToString(
+  <body>
+    <div id="root" dangerouslySetInnerHtml={{ __html: html }} />
+    {chunkExtractor.getScriptElementsByChunks({ includedChunks: ['chunk-name'] })}
   </body>,
 )
 ```
