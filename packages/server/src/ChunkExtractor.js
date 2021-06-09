@@ -254,7 +254,8 @@ class ChunkExtractor {
             filename,
             chunk,
             type: 'mainAsset',
-            linkType: 'preload',
+            // prefetch vs. preload gives much better TTI
+            linkType: 'prefetch',
           }),
         )
         .filter(isValidChunkAsset)
@@ -462,9 +463,10 @@ class ChunkExtractor {
   getPreAssets() {
     const mainAssets = this.getMainAssets()
     const chunks = [...this.entrypoints, ...this.chunks]
-    const preloadAssets = this.getChunkChildAssets(chunks, 'preload')
+    // No need to preload and prefetch the chunks
+    // const preloadAssets = this.getChunkChildAssets(chunks, 'preload')
     const prefetchAssets = this.getChunkChildAssets(chunks, 'prefetch')
-    return [...mainAssets, ...preloadAssets, ...prefetchAssets].sort(a =>
+    return [...mainAssets, ...prefetchAssets].sort(a =>
       a.scriptType === 'style' ? -1 : 0,
     )
   }
